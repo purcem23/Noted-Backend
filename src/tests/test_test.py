@@ -1,0 +1,190 @@
+from pprint import pprint
+from unittest import TestCase
+import pytest
+
+from schemas import NotesSchema, FlashCardSchema
+from tests.fixtures import client
+from unittest.mock import ANY
+
+
+class TestSchema(TestCase):
+    def test_notes_schema(self):
+        data = {'contents': 'games take consistency and map knowledge to master',
+                'finished': False,
+                'name': 'MLG Notes'}
+
+        result = NotesSchema().load(data)
+        assert result == {'contents': 'games take consistency and map knowledge to master',
+                          'finished': False,
+                          'name': 'MLG Notes'}
+
+    def test_flashcards_schema(self):
+        data = {'front': 'what does a test look like?',
+                'back': 'like this'}
+
+        result = FlashCardSchema().load(data)
+        assert result == {'front': 'what does a test look like?',
+                          'back': 'like this'}
+
+
+class TestNotes:
+    # client = client()
+    @pytest.mark.usefixtures('client')
+    def test_notes_post(self, client):
+        response = client.get('/notes')
+        assert response.status_code == 200
+        assert response.json == []
+        data = {
+            'finished': False,
+            'name': 'Code Notes',
+            'contents': 'Coding is hard but consistency and documentation helps'
+        }
+        expected = {
+            'id': ANY,
+            'date_created': ANY,
+            'finished': False,
+            'name': 'Code Notes',
+            'contents': 'Coding is hard but consistency and documentation helps'
+        }
+        response = client.post('/notes', json=data)
+        assert response.status_code == 201
+        response = client.get('/notes')
+        assert response.status_code == 200
+        assert len(response.json) == 1
+        assert response.json[0] == expected
+
+    def test_notes_delete(self, client):
+        response = client.get('/notes')
+        assert response.status_code == 200
+        assert response.json == []
+        data = {
+            'finished': False,
+            'name': 'Code Notes',
+            'contents': 'This note needs to be deleted'
+        }
+        response = client.post('/notes', json=data)
+        assert response.status_code == 201
+        response = client.delete('/notes/'+str(response.json['id']))
+        assert response.status_code == 200
+        response = client.get('/notes')
+        assert response.status_code == 200
+        assert response.json == []
+
+    def tests_notes_get(self, client):
+        data = {
+            'finished': False,
+            'name': 'Code Notes',
+            'contents': 'Coding is hard but consistency and documentation helps'
+        }
+        expected = {
+            'id': ANY,
+            'date_created': ANY,
+            'finished': False,
+            'name': 'Code Notes',
+            'contents': 'Coding is hard but consistency and documentation helps'
+        }
+        response = client.post('/notes', json=data)
+        assert response.status_code == 201
+        response = client.get('/notes')
+        assert response.status_code == 200
+        assert len(response.json) == 1
+        assert response.json[0] == expected
+
+
+class TestFlashCards:
+
+    @pytest.mark.usefixtures('client')
+    def test_flashcard_post(self, client):
+        response = client.get('/flashcards')
+        assert response.status_code == 200
+        assert response.json == []
+        data = {'front': 'what does a test look like?',
+                'back': 'like this'}
+        expected = {
+            'id': ANY,
+            'date_created': ANY,
+            'date_viewed': ANY,
+            'front': 'what does a test look like?',
+            'back': 'like this'
+        }
+        response = client.post('/flashcards', json=data)
+        assert response.status_code == 201
+        response = client.get('/flashcards')
+        assert response.status_code == 200
+        assert len(response.json) == 1
+        assert response.json[0] == expected
+
+    def test_flashcards_delete(self, client):
+        response = client.get('/flashcards')
+        assert response.status_code == 200
+        assert response.json == []
+        data = {'front': 'what does a test look like?',
+                'back': 'like this'}
+        response = client.post('/flashcards', json=data)
+        assert response.status_code == 201
+        response = client.delete('/flashcards/'+str(response.json['id']))
+        assert response.status_code == 200
+        response = client.get('/flashcards')
+        assert response.status_code == 200
+        assert response.json == []
+
+    def tests_flashcards_get(self, client):
+        data = {'front': 'what does a test look like?',
+                'back': 'like this'}
+        expected = {
+            'id': ANY,
+            'date_created': ANY,
+            'date_viewed': ANY,
+            'front': 'what does a test look like?',
+            'back': 'like this'
+        }
+        response = client.post('/flashcards', json=data)
+        assert response.status_code == 201
+        response = client.get('/flashcards')
+        assert response.status_code == 200
+        assert len(response.json) == 1
+        assert response.json[0] == expected
+
+
+# # pytest - assert condition == value e.g. run data + first loop. assert responce.jason() == data?
+# BASE = 'http://127.0.0.1:5000/'
+# data = [{'finished': False, 'name': 'Code Notes', 'contents': 'Coding is hard but consistency and documentation helps'},
+#         {'finished': True, 'name': 'Swole Notes', 'contents': 'Gains are easy but like code take consistency'},
+#         {'finished': False, 'name': 'MLG Notes', 'contents': 'games take consistency and map knowledge to master'}]
+#
+# for i in range(len(data)):
+#     print(BASE + 'note/')
+#     responce = requests.post(BASE + 'note', json=data[i])  # make end points plural
+#     pprint(responce.json())  # defining .json means it will be readable
+#
+# input()
+#
+# x = requests.get(BASE + 'note')
+# pprint(x.json())
+# # input()
+
+
+# # 'delete method'
+# responce = requests.delete(BASE + 'note/3')
+# pprint(responce.json())  # defining .json means it will be readable
+
+# input()
+# x = requests.get(BASE + 'note')
+#
+# pprint(x.json())
+
+# responce = requests.get(BASE + 'video/') #q for paddy, how to return all with get
+# print(responce.json())
+
+# #
+# input()
+# # # import pdb; pdb.set_trace()
+# responce = requests.patch(BASE + 'note/2', json={'contents': 'This note has been patched!'})
+# #
+# pprint(responce.json())  # defining .json means it will be readable
+#
+# # x = requests.get(BASE + 'note')
+# pprint(x.json())
+
+# views = contents
+# likes = finished bool
