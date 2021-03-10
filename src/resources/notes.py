@@ -1,9 +1,9 @@
 from flask import jsonify, request
 from flask_restful import abort, reqparse
 
-from config import app, db
-from models import NoteModel
-from schemas import NotesSchema
+from ..config import app, db
+from ..models import NoteModel
+from ..schemas import NotesSchema
 
 note_put_args = reqparse.RequestParser()
 note_put_args.add_argument('name', type=str, help='Name of the Note is required', required=True)

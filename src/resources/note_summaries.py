@@ -1,9 +1,9 @@
 from flask import jsonify
 from flask_restful import abort
 
-from config import app
-from models import NoteModel
-from schemas import NotesSchema
+from ..config import app
+from ..models import NoteModel
+from ..schemas import NotesSchema
 from .nlp_utils import generate_summary
 
 

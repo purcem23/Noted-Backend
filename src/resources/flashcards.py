@@ -3,9 +3,9 @@ from datetime import datetime
 from flask import jsonify, request
 from flask_restful import abort
 
-from config import app, db
-from models import FlashCardModel
-from schemas import FlashCardSchema
+from ..config import app, db
+from ..models import FlashCardModel
+from ..schemas import FlashCardSchema
 
 
 # GET all method

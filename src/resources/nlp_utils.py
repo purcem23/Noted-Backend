@@ -49,7 +49,6 @@ def generate_summary(contents, top_n=3):
     summarize_note = []
     note = contents.split(". ")
     sentences = []
-    import pdb;pdb.set_trace()
     for sentence in note:
         sentences.append(sentence.replace("[^a-zA-Z]", " ").split(" "))
     sentences.pop()
