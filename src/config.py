@@ -2,8 +2,10 @@ from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flask_apiexceptions import JSONExceptionHandler
 
 app = Flask(__name__)
+exception_handler = JSONExceptionHandler(app)
 CORS(app)
 api = Api(app)  # tells program wrap as api
 # 'sqlite:///temp/database.db' to save to file

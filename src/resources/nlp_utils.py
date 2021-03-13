@@ -2,6 +2,13 @@ from nltk.corpus import stopwords
 from nltk.cluster.util import cosine_distance
 import numpy as np
 import networkx as nx
+from ..config import app
+from flask_apiexceptions import (
+    JSONExceptionHandler, ApiException, ApiError, api_exception_handler)
+
+exception_handler = JSONExceptionHandler()
+exception_handler.init_app(app)
+exception_handler.register(code_or_exception=ApiException, handler=api_exception_handler)
 
 
 def sentence_similarity(sent1, sent2, stopwords=None):
@@ -52,19 +59,23 @@ def generate_summary(contents, top_n=3):
     for sentence in note:
         sentences.append(sentence.replace("[^a-zA-Z]", " ").split(" "))
     sentences.pop()
-    # Step 1 - Read text anc split it
-
-
-    # Step 2 - Generate Similary Martix across sentences
+    # Generate similary martix across sentences
     sentence_similarity_martix = build_similarity_matrix(sentences, stop_words)
 
-    # Step 3 - Rank sentences in similarity martix
+    # Rank sentences in similarity martix
     sentence_similarity_graph = nx.from_numpy_array(sentence_similarity_martix)
     scores = nx.pagerank(sentence_similarity_graph)
 
-    # Step 4 - Sort the rank and pick top sentences
+    # Sort the rank and pick top sentences
     ranked_sentence = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
     print("Indexes of top ranked_sentence order are ", ranked_sentence)
+
+    if len(sentences) >= 10:
+        top_n = len(sentences)/0.6
+
+    if len(sentences) <= 4:
+        error = ApiError(code='400', message='Note too short to summarise')
+        raise ApiException(status_code=400, error=error)
 
     for i in range(top_n):
         summarize_note.append(" ".join(ranked_sentence[i][1]))

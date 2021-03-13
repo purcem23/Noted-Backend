@@ -2,8 +2,8 @@ from pprint import pprint
 from unittest import TestCase
 import pytest
 
-from schemas import NotesSchema, FlashCardSchema
-from tests.fixtures import client
+from ..schemas import NotesSchema, FlashCardSchema
+from ..tests.fixtures import client
 from unittest.mock import ANY
 
 
@@ -155,7 +155,6 @@ class TestSummaries:
                              'contents': 'A computer is a machine that can be instructed to carry out sequences of arithmetic or logical operations automatically via computer programming. Modern computers have the ability to follow generalized sets of operations, called programs. These programs enable computers to perform an extremely wide range of tasks. A "complete" computer including the hardware, the operating system (main software), and peripheral equipment required and used for "full" operation can be referred to as a computer system. This term may as well be used for a group of computers that are connected and work together, in particular a computer network or computer cluster.'}
         response = client.post('/notes', json=text_summer_data)
         response2 = client.get(f'/note-summaries/{response.json["id"]}', json=text_summer_data)
-        import pdb;pdb.set_trace()
         pass
 
 

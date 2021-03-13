@@ -3,10 +3,10 @@ import tempfile
 from unittest import TestCase
 
 import pytest
-from resources.notes import app
-from resources.flashcards import app
-from resources.note_summaries import app
-from config import db
+from ..resources.notes import app
+from ..resources.flashcards import app
+from ..resources.note_summaries import app
+from ..config import db
 
 
 @pytest.fixture
