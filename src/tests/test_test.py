@@ -2,7 +2,7 @@ from pprint import pprint
 from unittest import TestCase
 import pytest
 
-from ..schemas import NotesSchema, FlashCardSchema
+from ..schemas import NotesSchema, FlashCardSchema, UserSchema
 from ..tests.fixtures import client
 from unittest.mock import ANY
 
@@ -89,6 +89,25 @@ class TestNotes:
         assert response.status_code == 200
         assert len(response.json) == 1
         assert response.json[0] == expected
+
+    def tests_notes_completed(self, client):
+        data = {
+            'finished': False,
+            'name': 'Code Notes',
+            'contents': 'Coding is hard but consistency and documentation helps'
+        }
+        expected = {
+            'id': ANY,
+            'date_created': ANY,
+            'finished': True,
+            'name': 'Code Notes',
+            'contents': 'Coding is hard but consistency and documentation helps'
+        }
+        response = client.post('/notes', json=data)
+        assert response.status_code == 201
+        response = client.put(f'/notes-completed/{response.json["id"]}')
+        assert response.status_code == 200
+        assert response.json == expected
 
 
 class TestFlashCards:

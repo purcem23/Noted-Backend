@@ -64,6 +64,15 @@ def notes_delete(note_id):
     return '200'
 
 
+@app.route('/notes-completed/<int:note_id>', methods=['PUT'])
+def notes_completed(note_id):
+    print(request.json)
+    result = NoteModel.query.filter_by(id=note_id).first()
+    if not result:
+        abort(404, message='Note does not exist, cannot update')
+    result.finished = True
+    db.session.commit()
+    return jsonify(NotesSchema().dump(result))
 
 
 # dump from database

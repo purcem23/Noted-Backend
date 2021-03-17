@@ -16,3 +16,11 @@ class FlashCardSchema(Schema):
     back = fields.Str()
     date_created = fields.DateTime(dump_only=True)
     date_viewed = fields.DateTime(dump_only=True)
+
+
+class UserSchema(Schema):
+    id = fields.Integer(dump_only=True)
+    username = fields.Str()
+    password_hash = fields.Str()
+    notes = fields.Integer(dump_only=True)
+    flashcards = fields.Integer(dump_only=True)
