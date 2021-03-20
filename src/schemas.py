@@ -24,3 +24,9 @@ class UserSchema(Schema):
     password_hash = fields.Str()
     notes = fields.Integer(dump_only=True)
     flashcards = fields.Integer(dump_only=True)
+
+
+class LoginSchema(Schema):
+    username = fields.Str()
+    password = fields.Str()
+    remember_me = fields.Boolean()

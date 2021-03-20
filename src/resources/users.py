@@ -1,9 +1,9 @@
-from flask import jsonify, request
+from flask import jsonify, request, url_for, redirect, flash
 from flask_restful import abort
-
+from flask_login import current_user, login_user, logout_user
 from ..config import app, db
 from ..models import UserModel
-from ..schemas import UserSchema
+from ..schemas import UserSchema, LoginSchema
 
 
 # GET all method
@@ -52,3 +52,24 @@ def users_delete(user_id):
     db.session.delete(result)
     db.session.commit()
     return '200'
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    if LoginSchema().validate(request.json):
+        data = LoginSchema().load(request.json)
+        user = UserModel.query.filter_by(username=data["username"]).first()
+        if user is None or not user.check_password(data["password"]):
+            flash('Invalid username or password')
+            return redirect(url_for('login'))
+        login_user(user, remember=data["remember_me"])
+        return redirect(url_for('index'))
+    return redirect(url_for("index"))  # TODO figure out if needed
+
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
