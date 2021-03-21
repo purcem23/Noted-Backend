@@ -1,3 +1,4 @@
+import math
 from nltk.corpus import stopwords
 from nltk.cluster.util import cosine_distance
 import numpy as np
@@ -68,10 +69,9 @@ def generate_summary(contents, top_n=3):
 
     # Sort the rank and pick top sentences
     ranked_sentence = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
-    print("Indexes of top ranked_sentence order are ", ranked_sentence)
 
     if len(sentences) >= 10:
-        top_n = len(sentences)/0.6
+        top_n = math.floor(len(sentences)*0.4)
 
     if len(sentences) <= 4:
         error = ApiError(code='400', message='Note too short to summarise')
