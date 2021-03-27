@@ -29,7 +29,8 @@ def users_post():
 def login():
     login = LoginSchema().load(request.json)
     user = guard.authenticate(login['username'], login['password'])
-    result = jsonify({'access_token': guard.encode_jwt_token(user)})
+    result = jsonify({'access_token': guard.encode_jwt_token(
+        user), 'username': user.username})
     return result, 200
 
 
