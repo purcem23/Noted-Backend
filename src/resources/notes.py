@@ -1,5 +1,6 @@
 from flask import jsonify, request
 from flask_restful import abort, reqparse
+import flask_praetorian
 
 from ..config import app, db
 from ..models import NoteModel
@@ -18,15 +19,17 @@ note_update_args.add_argument('finished', type=bool, help='Is the note finished'
 
 # GET all method
 @app.route('/notes', methods=['GET'])  # TODO change path to /notes
+@flask_praetorian.auth_required
 def notes_list_get():
-    notes = NoteModel.query.all()
+    notes = NoteModel.query.filter_by(user_id=flask_praetorian.current_user().id)
     return jsonify(NotesSchema(many=True).dump(notes))
 
 
 # GET all by id
 @app.route('/notes/<int:note_id>', methods=['GET'])
+@flask_praetorian.auth_required
 def notes_get(note_id):
-    result = NoteModel.query.filter_by(id=note_id).first()
+    result = NoteModel.query.filter_by(id=note_id, user_id=flask_praetorian.current_user().id).first()
     if not result:
         abort(404, message='Could not find Note with that ID')
     return jsonify(NotesSchema().dump(result))
@@ -34,20 +37,21 @@ def notes_get(note_id):
 
 # POST one, not limited by id
 @app.route('/notes', methods=['POST'])
+@flask_praetorian.auth_required
 def notes_post():
     note = NotesSchema().load(request.json)
     note = NoteModel(**note)
-    db.session.add(note)  # add to current session
-    db.session.commit()  # commit and make perm, otherwise it temp
-    return jsonify(NotesSchema().dump(note)), 201  # 201 = created, 200 = ok(nothing broke)
+    note.user_id = flask_praetorian.current_user().id
+    db.session.add(note)
+    db.session.commit()
+    return jsonify(NotesSchema().dump(note)), 201
 
 
 @app.route('/notes/<int:note_id>', methods=['PATCH'])
+@flask_praetorian.auth_required
 def notes_patch(note_id):
-    print(request.json)
     note = NotesSchema(partial=True).load(request.json)
-    # note = NoteModel(**note)
-    result = NoteModel.query.filter_by(id=note_id).first()
+    result = NoteModel.query.filter_by(id=note_id, user_id=flask_praetorian.current_user().id).first()
     if not result:
         abort(404, message='Note does not exist, cannot update')
     for key, value in note.items():
@@ -57,20 +61,34 @@ def notes_patch(note_id):
 
 
 @app.route('/notes/<int:note_id>', methods=['DELETE'])
+@flask_praetorian.auth_required
 def notes_delete(note_id):
-    result = NoteModel.query.filter_by(id=note_id).first()
+    result = NoteModel.query.filter_by(id=note_id, user_id=flask_praetorian.current_user().id).first()
+    if not result:
+        abort(404, message='Note does not exist, cannot de,ete')
     db.session.delete(result)
     db.session.commit()
     return '200'
 
 
-@app.route('/notes-completed/<int:note_id>', methods=['PUT'])
+@app.route('/notes/<int:note_id>/complete', methods=['PUT'])
+@flask_praetorian.auth_required
 def notes_completed(note_id):
-    print(request.json)
-    result = NoteModel.query.filter_by(id=note_id).first()
+    result = NoteModel.query.filter_by(id=note_id, user_id=flask_praetorian.current_user().id).first()
     if not result:
         abort(404, message='Note does not exist, cannot update')
     result.finished = True
+    db.session.commit()
+    return jsonify(NotesSchema().dump(result))
+
+
+@app.route('/notes/<int:note_id>/incomplete', methods=['PUT'])
+@flask_praetorian.auth_required
+def notes_incompleted(note_id):
+    result = NoteModel.query.filter_by(id=note_id, user_id=flask_praetorian.current_user().id).first()
+    if not result:
+        abort(404, message='Note does not exist, cannot update')
+    result.finished = False
     db.session.commit()
     return jsonify(NotesSchema().dump(result))
 
