@@ -3,7 +3,7 @@ from unittest import TestCase
 import pytest
 import requests
 
-user_data = {'username': 'Admin User', 'password_hash': 'test101'}
+user_data = {'front': 'Admin User', 'back': 'test101'}
 BASE = 'http://127.0.0.1:5000/'
 data = [{'finished': False, 'name': 'Code Notes', 'contents': 'Coding is hard but consistency and documentation helps'},
         {'finished': True, 'name': 'Swole Notes', 'contents': 'Gains are easy but like code take consistency'},
@@ -25,8 +25,8 @@ data = [{'finished': False, 'name': 'Code Notes', 'contents': 'Coding is hard bu
 #
 
 for i in range(len(user_data)):
-    print(BASE + 'users/')
-    response = requests.post(BASE + 'users', json=data[i])  # make end points plural
+    print(BASE + 'flashcards/')
+    response = requests.post(BASE + 'flashcards', json=user_data)  # make end points plural
     print(response.json())  # defining .json means it will be readable
 
 

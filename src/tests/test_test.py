@@ -26,6 +26,14 @@ class TestSchema(TestCase):
         assert result == {'front': 'what does a test look like?',
                           'back': 'like this'}
 
+    def test_users_schema(self):
+        data = {'username': 'test_user1',
+                          'password_hash': 'test_user1_password'}
+
+        result = UserSchema().load(data)
+        assert result == {'username': 'test_user1',
+                          'password_hash': 'test_user1_password'}
+
 
 class TestNotes:
     # client = client()
@@ -177,6 +185,27 @@ class TestSummaries:
         pass
 
 
+# class TestUsers:
+#
+#     @pytest.mark.usefixtures('client')
+#     def test_users_post(self, client):
+#         response = client.get('/users')
+#         assert response.status_code == 200
+#         assert response.json == []
+#         data = {'username': 'test_user1',
+#                 'password_hash': 'test_user1_password'}
+#         expected = {
+#             'id': ANY,
+#             'username': 'test_user1'
+#         }
+#         response = client.post('/users', json=data)
+#         assert response.status_code == 201
+#         response = client.get('/users')
+#         assert response.status_code == 200
+#         assert len(response.json) == 1
+#         assert response.json[0] == expected
+#
+#
 
 
 # # pytest - assert condition == value e.g. run data + first loop. assert responce.jason() == data?

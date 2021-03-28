@@ -56,8 +56,18 @@ class FlashCardModel(db.Model):
     back = db.Column(db.String(150), nullable=False)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.now)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    date_viewed = db.Column(db.DateTime, nullable=True)
-    date_due = db.Column(db.DateTime, nullable=True)
-    multiplier = db.Column(db.Integer, nullable=True)
+    date_due = db.Column(db.DateTime, nullable=True, default=datetime.now)
 
 
+class FlashCardActivityModel(db.Model):
+    __tablename__ = 'flashcard_activity'
+    id = db.Column(db.Integer, primary_key=True)
+    flashcards_id = db.Column(db.Integer, db.ForeignKey('flashcard.id'))
+    date_reviewed = db.Column(db.DateTime, nullable=True)
+    quality = db.Column(db.Integer, nullable=True)
+    easiness = db.Column(db.Float)
+    interval = db.Column(db.Integer)
+    repetitions = db.Column(db.Integer)
+    __mapper_args__ = {
+        'order_by' : date_reviewed.desc()
+    }

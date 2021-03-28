@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, validate
 
 
 class NotesSchema(Schema):
@@ -15,8 +15,7 @@ class FlashCardSchema(Schema):
     front = fields.Str()
     back = fields.Str()
     date_created = fields.DateTime(dump_only=True)
-    date_viewed = fields.DateTime(dump_only=True)
-
+    date_due = fields.DateTime(dump_only=True)
 
 class UserSchema(Schema):
     id = fields.Integer(dump_only=True)
@@ -27,3 +26,13 @@ class UserSchema(Schema):
 class LoginSchema(Schema):
     username = fields.Str()
     password = fields.Str()
+
+
+class FlashCardActivitySchema(Schema):
+    flashcards_id = fields.Integer(dump_only=True)
+    date_reviewed = fields.DateTime(dump_only=True)
+    score = fields.Integer()
+
+
+class FlashCardAnswerSchema(Schema):
+    score = fields.Integer(validate=validate.OneOf([1, 2, 3, 4, 5]))
