@@ -3,17 +3,34 @@ from datetime import datetime
 from flask import jsonify, request
 from flask_restful import abort
 import flask_praetorian
-
+import re
 from ..config import app, db
-from ..models import FlashCardModel, FlashCardActivityModel
-from ..schemas import FlashCardSchema, FlashCardAnswerSchema
+from ..models import FlashCardModel, FlashCardActivityModel, TagModel
+from ..schemas import FlashCardSchema, FlashCardAnswerSchema, TagSchema
 from supermemo2 import first_review, SMTwo
+
+
+def get_or_create(session, model, **kwargs):
+    instance = session.query(model).filter_by(**kwargs).first()
+    if instance:
+        return instance
+    else:
+        instance = model(**kwargs)
+        session.add(instance)
+        session.commit()
+        return instance
+
 
 # GET all method
 @app.route('/flashcards', methods=['GET'])
 @flask_praetorian.auth_required
 def flashcard_list_get():
-    flashcards = FlashCardModel.query.filter_by(user_id=flask_praetorian.current_user().id)
+    tag_name = request.args.get('tag')
+    if tag_name:
+        flashcards = FlashCardModel.query.filter(FlashCardModel.tags.any(name=tag_name),
+                                                 FlashCardModel.user_id == flask_praetorian.current_user().id).all()
+    else:
+        flashcards = FlashCardModel.query.filter(FlashCardModel.user_id == flask_praetorian.current_user().id).all()
     return jsonify(FlashCardSchema(many=True).dump(flashcards))
 
 
@@ -34,6 +51,14 @@ def flashcard_post():
     flashcard = FlashCardSchema().load(request.json)
     flashcard = FlashCardModel(**flashcard)
     flashcard.user_id = flask_praetorian.current_user().id
+    matches = re.findall(r"\B(#[a-zA-Z0-9]+\b)", flashcard.back)
+    #remove old tags
+    flashcard.tags = []
+    for match in matches:
+        tag = get_or_create(db.session, TagModel, name=match[1:])
+        flashcard.tags.append(tag)
+        #create/find tag
+        #add tag to notes
     db.session.add(flashcard)
     db.session.commit()
     return jsonify(FlashCardSchema().dump(flashcard)), 201
@@ -48,9 +73,16 @@ def flashcard_patch(flashcards_id):
         abort(404, message='Flashcard does not exist, cannot update')
     for key, value in flashcard.items():
         setattr(result, key, value)
+    matches = re.findall(r"\B(#[a-zA-Z0-9]+\b)", flashcard['back'])
+    # remove old tags
+    result.tags = []
+    for match in matches:
+        tag = get_or_create(db.session, TagModel, name=match[1:])
+        result.tags.append(tag)
+        # create/find tag
+        # add tag to notes
     db.session.commit()
     return jsonify(FlashCardSchema().dump(result))
-
 
 
 @app.route('/flashcard-answers/<int:flashcards_id>', methods=['PUT'])
@@ -61,17 +93,17 @@ def flashcard_put_answers(flashcards_id):
     if previous.count() == 0:
         review = first_review(answer['score'], datetime.now())
         data = dict(
-            flashcards_id = flashcards_id,
+            flashcards_id=flashcards_id,
             quality=answer['score'],
             easiness=review._SMTwo__easiness,
             interval=review._SMTwo__interval,
             repetitions=review._SMTwo__repetitions,
-            date_reviewed = datetime.now()
+            date_reviewed=datetime.now()
         )
         log = FlashCardActivityModel(**data)
         result.date_due = review._SMTwo__review_date
-        db.session.add(log)  # add to current session
-        db.session.commit()  # commit and make perm, otherwise it temp
+        db.session.add(log)
+        db.session.commit()
 
     else:
         last_review = previous.first()
@@ -89,17 +121,17 @@ def flashcard_put_answers(flashcards_id):
             repetitions=review._SMTwo__repetitions,
             date_reviewed=datetime.now())
         result.date_due = review._SMTwo__review_date
-        db.session.add(log)  # add to current session
-        db.session.commit()  # commit and make perm, otherwise it temp
+        db.session.add(log)
+        db.session.commit()
     return '200'
 
 
 @app.route('/flashcards-due', methods=['GET'])
 def flashcards_due(user_id):
-    flashcards = db.session.query(FlashCardModel).filter(FlashCardModel.date_due <= datetime.now()) #, FlashCardModel.user_id == user_id)
+    flashcards = db.session.query(FlashCardModel).filter(
+        FlashCardModel.date_due <= datetime.now())  # , FlashCardModel.user_id == user_id)
     # flashcards = FlashCardModel.query.filter_by(id=user_id,date_due())
     return jsonify(FlashCardSchema(many=True).dump(flashcards))
-
 
 
 @app.route('/flashcards/<int:flashcards_id>', methods=['DELETE'])
@@ -111,9 +143,6 @@ def flashcard_delete(flashcards_id):
     db.session.delete(result)
     db.session.commit()
     return '200'
-
-
-
 
 # dump from database
 # NoteSchema load from user

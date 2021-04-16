@@ -6,6 +6,7 @@ import networkx as nx
 from ..config import app
 from flask_apiexceptions import (
     JSONExceptionHandler, ApiException, ApiError, api_exception_handler)
+from nltk.tokenize import sent_tokenize
 
 exception_handler = JSONExceptionHandler()
 exception_handler.init_app(app)
@@ -55,7 +56,8 @@ def build_similarity_matrix(sentences, stop_words):
 def generate_summary(contents, top_n=3):
     stop_words = stopwords.words('english')
     summarize_note = []
-    note = contents.split(". ")
+    # note = contents.split(". ")
+    note = sent_tokenize(contents)
     sentences = []
     for sentence in note:
         sentences.append(sentence.replace("[^a-zA-Z]", " ").split(" "))

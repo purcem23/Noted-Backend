@@ -1,5 +1,21 @@
 from datetime import datetime
+
+from sqlalchemy.orm import relationship
+
 from .config import db
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
+
+note_tag_table = db.Table('note_tag_table', db.metadata,
+                          db.Column('tag_name', db.String, db.ForeignKey('tag.name')),
+                          db.Column('note_id', db.Integer, db.ForeignKey('note.id'))
+                          )
+
+flashcard_tag_table = db.Table('flashcard_tag_table', db.metadata,
+                          db.Column('tag_name', db.String, db.ForeignKey('tag.name')),
+                          db.Column('flashcard_id', db.Integer, db.ForeignKey('flashcard.id'))
+                          )
 
 
 class UserModel(db.Model):
@@ -41,6 +57,7 @@ class NoteModel(db.Model):
     finished = db.Column(db.Boolean, nullable=False)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.now)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    tags = relationship('TagModel', secondary=note_tag_table, back_populates='notes')
 
     def __repr__(self):
         return f'Note(name = {self.name},' \
@@ -57,7 +74,7 @@ class FlashCardModel(db.Model):
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.now)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     date_due = db.Column(db.DateTime, nullable=True, default=datetime.now)
-
+    tags = relationship('TagModel', secondary=flashcard_tag_table, back_populates='flashcards')
 
 class FlashCardActivityModel(db.Model):
     __tablename__ = 'flashcard_activity'
@@ -71,3 +88,13 @@ class FlashCardActivityModel(db.Model):
     __mapper_args__ = {
         'order_by' : date_reviewed.desc()
     }
+
+
+class TagModel(db.Model):
+    __tablename__ = 'tag'
+    name = db.Column(db.String(64), primary_key=True)
+    notes = relationship('NoteModel', secondary=note_tag_table, back_populates='tags')
+    flashcards = relationship('FlashCardModel', secondary=flashcard_tag_table, back_populates='tags')
+    def __repr__(self):
+        return str(self.name)
+

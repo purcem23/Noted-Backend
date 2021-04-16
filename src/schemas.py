@@ -8,6 +8,7 @@ class NotesSchema(Schema):
     finished = fields.Boolean()
     date_created = fields.DateTime(dump_only=True)
     note_type = fields.Str()
+    tags = fields.List(fields.Str(), dump_only=True)
 
 
 class FlashCardSchema(Schema):
@@ -17,10 +18,11 @@ class FlashCardSchema(Schema):
     date_created = fields.DateTime(dump_only=True)
     date_due = fields.DateTime(dump_only=True)
 
+
 class UserSchema(Schema):
     id = fields.Integer(dump_only=True)
     username = fields.Str()
-    password = fields.Str()
+    password = fields.Str(load_only=True)
 
 
 class LoginSchema(Schema):
@@ -36,3 +38,7 @@ class FlashCardActivitySchema(Schema):
 
 class FlashCardAnswerSchema(Schema):
     score = fields.Integer(validate=validate.OneOf([1, 2, 3, 4, 5]))
+
+
+class TagSchema(Schema):
+    name = fields.Str()

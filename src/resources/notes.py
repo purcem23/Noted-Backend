@@ -1,10 +1,10 @@
 from flask import jsonify, request
 from flask_restful import abort, reqparse
 import flask_praetorian
-
+import re
 from ..config import app, db
-from ..models import NoteModel
-from ..schemas import NotesSchema
+from ..models import NoteModel, TagModel
+from ..schemas import NotesSchema, TagSchema
 
 note_put_args = reqparse.RequestParser()
 note_put_args.add_argument('name', type=str, help='Name of the Note is required', required=True)
@@ -17,11 +17,27 @@ note_update_args.add_argument('contents', type=str, help='Contents of the Note2'
 note_update_args.add_argument('finished', type=bool, help='Is the note finished')
 
 
+def get_or_create(session, model, **kwargs):
+    instance = session.query(model).filter_by(**kwargs).first()
+    if instance:
+        return instance
+    else:
+        instance = model(**kwargs)
+        session.add(instance)
+        session.commit()
+        return instance
+
+
 # GET all method
-@app.route('/notes', methods=['GET'])  # TODO change path to /notes
+@app.route('/notes', methods=['GET'])
 @flask_praetorian.auth_required
 def notes_list_get():
-    notes = NoteModel.query.filter_by(user_id=flask_praetorian.current_user().id)
+    tag_name = request.args.get('tag')
+    if tag_name:
+        notes = NoteModel.query.filter(NoteModel.tags.any(name=tag_name),
+                                       NoteModel.user_id == flask_praetorian.current_user().id).all()
+    else:
+        notes = NoteModel.query.filter(NoteModel.user_id == flask_praetorian.current_user().id).all()
     return jsonify(NotesSchema(many=True).dump(notes))
 
 
@@ -42,6 +58,16 @@ def notes_post():
     note = NotesSchema().load(request.json)
     note = NoteModel(**note)
     note.user_id = flask_praetorian.current_user().id
+    # result = TagModel.query.filter_by(name='first_tag').first()
+    # note.tags.append(result)
+    matches = re.findall(r"\B(#[a-zA-Z0-9]+\b)", note.contents)
+    #remove old tags
+    note.tags = []
+    for match in matches:
+        tag = get_or_create(db.session, TagModel, name=match[1:])
+        note.tags.append(tag)
+        #create/find tag
+        #add tag to notes
     db.session.add(note)
     db.session.commit()
     return jsonify(NotesSchema().dump(note)), 201
@@ -56,6 +82,14 @@ def notes_patch(note_id):
         abort(404, message='Note does not exist, cannot update')
     for key, value in note.items():
         setattr(result, key, value)
+    matches = re.findall(r"\B(#[a-zA-Z0-9]+\b)", note['contents'])
+    #remove old tags
+    result.tags = []
+    for match in matches:
+        tag = get_or_create(db.session, TagModel, name=match[1:])
+        result.tags.append(tag)
+        #create/find tag
+        #add tag to notes
     db.session.commit()
     return jsonify(NotesSchema().dump(result))
 
@@ -91,6 +125,15 @@ def notes_incompleted(note_id):
     result.finished = False
     db.session.commit()
     return jsonify(NotesSchema().dump(result))
+
+
+# GET all method
+@app.route('/tags', methods=['GET'])
+@flask_praetorian.auth_required
+def tags_list_get():
+    tags = TagModel.query.filter_by()
+    return jsonify(TagSchema(many=True).dump(tags))
+
 
 
 # dump from database
