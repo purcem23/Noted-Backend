@@ -5,16 +5,23 @@ import re
 from ..config import app, db
 from ..models import NoteModel, TagModel
 from ..schemas import NotesSchema, TagSchema
+from .nlp_utils import generate_summary
 
 note_put_args = reqparse.RequestParser()
-note_put_args.add_argument('name', type=str, help='Name of the Note is required', required=True)
-note_put_args.add_argument('contents', type=str, help='Contents of the Note1', required=True)
-note_put_args.add_argument('finished', type=bool, help='Is the note finished', required=True)
+note_put_args.add_argument(
+    'name', type=str, help='Name of the Note is required', required=True)
+note_put_args.add_argument(
+    'contents', type=str, help='Contents of the Note1', required=True)
+note_put_args.add_argument('finished', type=bool,
+                           help='Is the note finished', required=True)
 
 note_update_args = reqparse.RequestParser()
-note_update_args.add_argument('name', type=str, help='Name of the Note is required')
-note_update_args.add_argument('contents', type=str, help='Contents of the Note2')
-note_update_args.add_argument('finished', type=bool, help='Is the note finished')
+note_update_args.add_argument(
+    'name', type=str, help='Name of the Note is required')
+note_update_args.add_argument(
+    'contents', type=str, help='Contents of the Note2')
+note_update_args.add_argument(
+    'finished', type=bool, help='Is the note finished')
 
 
 def get_or_create(session, model, **kwargs):
@@ -37,7 +44,8 @@ def notes_list_get():
         notes = NoteModel.query.filter(NoteModel.tags.any(name=tag_name),
                                        NoteModel.user_id == flask_praetorian.current_user().id).all()
     else:
-        notes = NoteModel.query.filter(NoteModel.user_id == flask_praetorian.current_user().id).all()
+        notes = NoteModel.query.filter(
+            NoteModel.user_id == flask_praetorian.current_user().id).all()
     return jsonify(NotesSchema(many=True).dump(notes))
 
 
@@ -45,9 +53,11 @@ def notes_list_get():
 @app.route('/notes/<int:note_id>', methods=['GET'])
 @flask_praetorian.auth_required
 def notes_get(note_id):
-    result = NoteModel.query.filter_by(id=note_id, user_id=flask_praetorian.current_user().id).first()
+    result = NoteModel.query.filter_by(
+        id=note_id, user_id=flask_praetorian.current_user().id).first()
     if not result:
         abort(404, message='Could not find Note with that ID')
+    result.summary = generate_summary(result.contents)
     return jsonify(NotesSchema().dump(result))
 
 
@@ -61,13 +71,13 @@ def notes_post():
     # result = TagModel.query.filter_by(name='first_tag').first()
     # note.tags.append(result)
     matches = re.findall(r"\B(#[a-zA-Z0-9]+\b)", note.contents)
-    #remove old tags
+    # remove old tags
     note.tags = []
     for match in matches:
         tag = get_or_create(db.session, TagModel, name=match[1:])
         note.tags.append(tag)
-        #create/find tag
-        #add tag to notes
+        # create/find tag
+        # add tag to notes
     db.session.add(note)
     db.session.commit()
     return jsonify(NotesSchema().dump(note)), 201
@@ -77,19 +87,20 @@ def notes_post():
 @flask_praetorian.auth_required
 def notes_patch(note_id):
     note = NotesSchema(partial=True).load(request.json)
-    result = NoteModel.query.filter_by(id=note_id, user_id=flask_praetorian.current_user().id).first()
+    result = NoteModel.query.filter_by(
+        id=note_id, user_id=flask_praetorian.current_user().id).first()
     if not result:
         abort(404, message='Note does not exist, cannot update')
     for key, value in note.items():
         setattr(result, key, value)
     matches = re.findall(r"\B(#[a-zA-Z0-9]+\b)", note['contents'])
-    #remove old tags
+    # remove old tags
     result.tags = []
     for match in matches:
         tag = get_or_create(db.session, TagModel, name=match[1:])
         result.tags.append(tag)
-        #create/find tag
-        #add tag to notes
+        # create/find tag
+        # add tag to notes
     db.session.commit()
     return jsonify(NotesSchema().dump(result))
 
@@ -97,7 +108,8 @@ def notes_patch(note_id):
 @app.route('/notes/<int:note_id>', methods=['DELETE'])
 @flask_praetorian.auth_required
 def notes_delete(note_id):
-    result = NoteModel.query.filter_by(id=note_id, user_id=flask_praetorian.current_user().id).first()
+    result = NoteModel.query.filter_by(
+        id=note_id, user_id=flask_praetorian.current_user().id).first()
     if not result:
         abort(404, message='Note does not exist, cannot de,ete')
     db.session.delete(result)
@@ -108,7 +120,8 @@ def notes_delete(note_id):
 @app.route('/notes/<int:note_id>/complete', methods=['PUT'])
 @flask_praetorian.auth_required
 def notes_completed(note_id):
-    result = NoteModel.query.filter_by(id=note_id, user_id=flask_praetorian.current_user().id).first()
+    result = NoteModel.query.filter_by(
+        id=note_id, user_id=flask_praetorian.current_user().id).first()
     if not result:
         abort(404, message='Note does not exist, cannot update')
     result.finished = True
@@ -119,7 +132,8 @@ def notes_completed(note_id):
 @app.route('/notes/<int:note_id>/incomplete', methods=['PUT'])
 @flask_praetorian.auth_required
 def notes_incompleted(note_id):
-    result = NoteModel.query.filter_by(id=note_id, user_id=flask_praetorian.current_user().id).first()
+    result = NoteModel.query.filter_by(
+        id=note_id, user_id=flask_praetorian.current_user().id).first()
     if not result:
         abort(404, message='Note does not exist, cannot update')
     result.finished = False
@@ -133,7 +147,6 @@ def notes_incompleted(note_id):
 def tags_list_get():
     tags = TagModel.query.filter_by()
     return jsonify(TagSchema(many=True).dump(tags))
-
 
 
 # dump from database

@@ -8,7 +8,7 @@ click==7.1.2
 colorama==0.4.4
 decorator==4.4.2
 Deprecated==1.2.12
-flake8==3.8.4
+flake8==3.9.0
 Flask==1.1.2
 Flask-ApiExceptions==1.1.2
 flask-buzz==0.1.15
@@ -38,8 +38,8 @@ pendulum==2.1.2
 pluggy==0.13.1
 py==1.10.0
 py-buzz==1.0.3
-pycodestyle==2.6.0
-pyflakes==2.2.0
+pycodestyle==2.7.0
+pyflakes==2.3.1
 PyJWT==1.7.1
 pyparsing==2.4.7
 pytest==6.2.2
