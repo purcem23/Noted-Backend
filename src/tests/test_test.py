@@ -78,14 +78,15 @@ class TestNotes(UserTestCase):
         data = {
             'finished': False,
             'name': 'Code Notes',
-            'contents': 'Coding is hard but consistency and documentation helps'
+            'contents': 'Coding is hard but consistency and documentation helps #coding'
         }
         expected = {
             'id': ANY,
             'date_created': ANY,
             'finished': False,
             'name': 'Code Notes',
-            'contents': 'Coding is hard but consistency and documentation helps'
+            'contents': 'Coding is hard but consistency and documentation helps #coding',
+            'tags': ['coding']
         }
         response = self.client.post('/notes', json=data, headers=self.auth_header)
         assert response.status_code == 201
@@ -129,14 +130,15 @@ class TestNotes(UserTestCase):
         data = {
             'finished': False,
             'name': 'Code Notes',
-            'contents': 'Coding is hard but consistency and documentation helps'
+            'contents': 'Coding is hard but consistency and documentation helps #coding'
         }
         expected = {
             'id': ANY,
             'date_created': ANY,
             'finished': False,
             'name': 'Code Notes',
-            'contents': 'Coding is hard but consistency and documentation helps'
+            'contents': 'Coding is hard but consistency and documentation helps #coding',
+            'tags': ['coding']
         }
         response = self.client.post('/notes', json=data, headers=self.auth_header)
         assert response.status_code == 201
@@ -156,7 +158,8 @@ class TestNotes(UserTestCase):
             'date_created': ANY,
             'finished': True,
             'name': 'Code Notes',
-            'contents': 'Coding is hard but consistency and documentation helps'
+            'contents': 'Coding is hard but consistency and documentation helps',
+            'tags': []
         }
         response = self.client.post('/notes', json=data, headers=self.auth_header)
         assert response.status_code == 201
@@ -175,7 +178,8 @@ class TestNotes(UserTestCase):
             'date_created': ANY,
             'finished': False,
             'name': 'Code Notes',
-            'contents': 'Coding is hard but consistency and documentation helps'
+            'contents': 'Coding is hard but consistency and documentation helps',
+            'tags': []
         }
         response = self.client.post('/notes', json=data, headers=self.auth_header)
         assert response.status_code == 201
@@ -190,13 +194,13 @@ class TestFlashCards(UserTestCase):
         assert response.status_code == 200
         assert response.json == []
         data = {'front': 'what does a test look like?',
-                'back': 'like this'}
+                'back': 'like this #test'}
         expected = {
             'id': ANY,
             'date_created': ANY,
-            'date_due': ANY,
             'front': 'what does a test look like?',
-            'back': 'like this'
+            'back': 'like this #test',
+            'tags': ['test']
         }
         response = self.client.post('/flashcards', json=data, headers=self.auth_header)
         assert response.status_code == 201
@@ -225,9 +229,9 @@ class TestFlashCards(UserTestCase):
         expected = {
             'id': ANY,
             'date_created': ANY,
-            'date_due': ANY,
             'front': 'what does a test look like?',
-            'back': 'like this'
+            'back': 'like this',
+            'tags': []
         }
         response = self.client.post('/flashcards', json=data, headers=self.auth_header)
         assert response.status_code == 201

@@ -17,7 +17,7 @@ class FlashCardSchema(Schema):
     front = fields.Str()
     back = fields.Str()
     date_created = fields.DateTime(dump_only=True)
-
+    tags = fields.List(fields.Str(), dump_only=True)
 
 
 class UserSchema(Schema):

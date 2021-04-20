@@ -22,8 +22,6 @@ def get_or_create(session, model, **kwargs):
 
 
 # GET all method
-
-
 @app.route('/flashcards', methods=['GET'])
 @flask_praetorian.auth_required
 def flashcard_list_get():
