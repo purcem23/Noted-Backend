@@ -53,7 +53,8 @@ def flashcard_post():
     flashcard = FlashCardSchema().load(request.json)
     flashcard = FlashCardModel(**flashcard)
     flashcard.user_id = flask_praetorian.current_user().id
-    matches = re.findall(r"\B(#[a-zA-Z0-9]+\b)", flashcard.back)
+    matches = re.findall(r"\B(#[a-zA-Z0-9]+\b)", flashcard.front)
+    matches += re.findall(r"\B(#[a-zA-Z0-9]+\b)", flashcard.back)
     # remove old tags
     flashcard.tags = []
     for match in matches:
@@ -76,7 +77,8 @@ def flashcard_patch(flashcards_id):
         abort(404, message='Flashcard does not exist, cannot update')
     for key, value in flashcard.items():
         setattr(result, key, value)
-    matches = re.findall(r"\B(#[a-zA-Z0-9]+\b)", flashcard['back'])
+    matches = re.findall(r"\B(#[a-zA-Z0-9]+\b)", flashcard['front'])
+    matches += re.findall(r"\B(#[a-zA-Z0-9]+\b)", flashcard['back'])
     # remove old tags
     result.tags = []
     for match in matches:
