@@ -58,7 +58,7 @@ def flashcard_post():
     # remove old tags
     flashcard.tags = []
     for match in matches:
-        tag = get_or_create(db.session, TagModel, name=match[1:])
+        tag = get_or_create(db.session, TagModel, name=match[1:].lower())
         flashcard.tags.append(tag)
         # create/find tag
         # add tag to notes
@@ -82,7 +82,7 @@ def flashcard_patch(flashcards_id):
     # remove old tags
     result.tags = []
     for match in matches:
-        tag = get_or_create(db.session, TagModel, name=match[1:])
+        tag = get_or_create(db.session, TagModel, name=match[1:].lower())
         result.tags.append(tag)
         # create/find tag
         # add tag to notes
@@ -106,7 +106,7 @@ def flashcard_delete(flashcards_id):
 @flask_praetorian.auth_required
 def flashcards_due():
     flashcards = FlashCardModel.query.filter_by(
-        user_id=flask_praetorian.current_user().id).filter(FlashCardModel.date_due <= datetime.now())
+        user_id=flask_praetorian.current_user().id).order_by(FlashCardModel.date_due.asc())
     return jsonify(FlashCardSchema(many=True).dump(flashcards))
 
 

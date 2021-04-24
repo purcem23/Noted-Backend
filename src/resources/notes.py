@@ -74,7 +74,7 @@ def notes_post():
     # remove old tags
     note.tags = []
     for match in matches:
-        tag = get_or_create(db.session, TagModel, name=match[1:])
+        tag = get_or_create(db.session, TagModel, name=match[1:].lower())
         note.tags.append(tag)
         # create/find tag
         # add tag to notes
@@ -97,7 +97,7 @@ def notes_patch(note_id):
     # remove old tags
     result.tags = []
     for match in matches:
-        tag = get_or_create(db.session, TagModel, name=match[1:])
+        tag = get_or_create(db.session, TagModel, name=match[1:].lower())
         result.tags.append(tag)
         # create/find tag
         # add tag to notes
