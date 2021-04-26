@@ -76,7 +76,7 @@ def generate_summary(contents, top_n=3):
         top_n = math.floor(len(sentences)*0.4)
 
     if len(sentences) <= 4:
-    	return ""
+        return ""
 
     for i in range(top_n):
         summarize_note.append(" ".join(ranked_sentence[i][1]))

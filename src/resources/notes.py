@@ -4,8 +4,9 @@ import flask_praetorian
 import re
 from ..config import app, db
 from ..models import NoteModel, TagModel
-from ..schemas import NotesSchema, TagSchema
+from ..schemas import NotesSchema, TagSchema, McqSchema
 from .nlp_utils import generate_summary
+from .mcq_generation import init_mcq, keyword_prep, keyword_to_sentence, generate_mcq
 
 note_put_args = reqparse.RequestParser()
 note_put_args.add_argument(
@@ -49,7 +50,7 @@ def notes_list_get():
     return jsonify(NotesSchema(many=True).dump(notes))
 
 
-# GET all by id
+# GET 1 by id
 @app.route('/notes/<int:note_id>', methods=['GET'])
 @flask_praetorian.auth_required
 def notes_get(note_id):
@@ -148,6 +149,20 @@ def tags_list_get():
     tags = TagModel.query.filter_by()
     return jsonify(TagSchema(many=True).dump(tags))
 
+
+@app.route('/notes_mcq/<int:note_id>', methods=['GET'])
+@flask_praetorian.auth_required
+def notes_mcq_get(note_id):
+    result = NoteModel.query.filter_by(
+        id=note_id, user_id=flask_praetorian.current_user().id).first()
+    if not result:
+        abort(404, message='Could not find Note with that ID')
+    summarized_text = init_mcq(result.contents)
+    keyword_preparation = keyword_prep(result.contents, summarized_text)
+    keyword_sentence_mapping = keyword_to_sentence(summarized_text, keyword_preparation)
+    generated_mcq = generate_mcq(keyword_sentence_mapping)
+    # import pdb; pdb.set_trace()
+    return jsonify(McqSchema(many=True).dump(generated_mcq))
 
 # dump from database
 # NoteSchema load from user

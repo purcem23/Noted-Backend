@@ -108,7 +108,6 @@ class TestNotes(UserTestCase):
     #     auth_token = data.access_token(data.id)
     #     self.assertTrue(isinstance(auth_token, bytes))
 
-
     def test_notes_delete(self):
         response = self.client.get('/notes', headers=self.auth_header)
         assert response.status_code == 200
@@ -187,6 +186,7 @@ class TestNotes(UserTestCase):
         assert response.status_code == 200
         assert response.json == expected
 
+
 class TestFlashCards(UserTestCase):
 
     def test_flashcard_post(self):
@@ -198,6 +198,7 @@ class TestFlashCards(UserTestCase):
         expected = {
             'id': ANY,
             'date_created': ANY,
+            'date_due': ANY,
             'front': 'what does a test look like?',
             'back': 'like this #test',
             'tags': ['test']
@@ -229,6 +230,7 @@ class TestFlashCards(UserTestCase):
         expected = {
             'id': ANY,
             'date_created': ANY,
+            'date_due': ANY,
             'front': 'what does a test look like?',
             'back': 'like this',
             'tags': []

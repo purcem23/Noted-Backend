@@ -132,6 +132,7 @@ def flashcard_put_answers(flashcards_id):
         )
         log = FlashCardActivityModel(**data)
         result.date_due = review._SMTwo__review_date
+
         db.session.add(log)
         db.session.commit()
     else:

@@ -38,3 +38,9 @@ class FlashCardAnswerSchema(Schema):
 
 class TagSchema(Schema):
     name = fields.Str()
+
+
+class McqSchema(Schema):
+    question = fields.Str()
+    answer = fields.Str()
+    fake_answers = fields.List(fields.Str())
