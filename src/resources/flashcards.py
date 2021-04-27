@@ -2,11 +2,12 @@ from datetime import datetime
 
 from flask import jsonify, request
 from flask_restful import abort
+from sqlalchemy.sql import func
 import flask_praetorian
 import re
 from ..config import app, db
-from ..models import FlashCardModel, FlashCardActivityModel, TagModel
-from ..schemas import FlashCardSchema, FlashCardAnswerSchema, TagSchema
+from ..models import FlashCardModel, FlashCardActivityModel, TagModel, flashcard_tag_table
+from ..schemas import FlashCardSchema, FlashCardAnswerSchema, TagSchema, TagStatSchema
 from supermemo2 import first_review, SMTwo
 
 
@@ -154,6 +155,14 @@ def flashcard_put_answers(flashcards_id):
         db.session.add(log)
         db.session.commit()
     return '200'
+
+
+@app.route('/stats', methods=['GET'])
+@flask_praetorian.auth_required
+def flashcard_stats():
+    tags = TagModel.query.join(flashcard_tag_table).join(FlashCardModel).filter_by(
+        user_id=flask_praetorian.current_user().id).join(FlashCardActivityModel).with_entities(TagModel.name.label('tag'), func.avg(FlashCardActivityModel.quality).label('score'), func.count(FlashCardActivityModel.quality).label('repetitions')).group_by(TagModel.name).all()
+    return jsonify(TagStatSchema(many=True).dump(tags))
 
 
 # dump from database

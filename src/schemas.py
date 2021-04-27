@@ -21,6 +21,12 @@ class FlashCardSchema(Schema):
     tags = fields.List(fields.Str(), dump_only=True)
 
 
+class TagStatSchema(Schema):
+    tag = fields.Str(dump_only=True)
+    score = fields.Number()
+    repetitions = fields.Integer()
+
+
 class UserSchema(Schema):
     id = fields.Integer(dump_only=True)
     username = fields.Str()
