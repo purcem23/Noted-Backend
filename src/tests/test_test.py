@@ -187,6 +187,70 @@ class TestNotes(UserTestCase):
         assert response.json == expected
 
 
+    def tests_tags(self):
+        data = {
+            'finished': False,
+            'name': 'Code Notes',
+            'contents': 'Coding is hard but consistency and documentation helps #coding'
+        }
+        expected = {
+            'id': ANY,
+            'date_created': ANY,
+            'finished': False,
+            'name': 'Code Notes',
+            'contents': 'Coding is hard but consistency and documentation helps #coding',
+            'tags': ['coding']
+        }
+        response = self.client.post('/notes', json=data, headers=self.auth_header)
+        assert response.status_code == 201
+        response = self.client.get('/notes', headers=self.auth_header)
+        assert response.status_code == 200
+        assert len(response.json) == 1
+        assert response.json[0] == expected
+
+    def tests_notes_mcq(self):
+        data = {
+            'finished': True,
+            'name': 'Code Notes',
+            'contents': 'The #Nile River flows from south to north through eastern Africa. It begins in the rivers that flow into Lake Victoria (located in modern-day Uganda, Tanzania, and Kenya), and empties into the Mediterranean Sea more than 6,600 #kilometers (4,100 miles) to the north, making it one of the longest river in the world. The Nile River was critical to the development of ancient Egypt. In addition to Egypt, the Nile runs through or along the border of 10 other African countries, namely, Burundi, Tanzania, Rwanda, the Democratic Republic of the Congo, Kenya, #Uganda, Sudan, Ethiopia, and South Sudan. Its three main tributaries are the White Nile, the Blue Nile, and the Atbara. The soil of the Nile River delta between El Qâhira (Cairo) and the Mediterranean Sea is rich in nutrients, due to the large silt deposits the Nile leaves behind as it flows into the sea. The banks of the Nile all along its vast length contain rich soil as well, thanks to annual flooding that deposits silt. From space, the contrast between the Niles lush green river banks and the barren desert through which it flows is obvious. For millennia, much of Egypts food has been cultivated in the Nile delta region. Ancient Egyptians developed irrigation methods to increase the amount of land they could use for crops and support a thriving population. Beans, cotton, wheat, and flax were important and abundant crops that could be easily stored and traded. The Nile River delta was also an ideal growing location for the papyrus plant. Ancient Egyptians used the papyrus plant in many ways, such as making cloth, boxes, and rope, but by far its most important use was in making paper. Besides using the rivers natural resources for themselves and trading them with others, early Egyptians also used the river for bathing, drinking, recreation, and transportation. Today, 95 percent of Egyptians live within a few kilometers of the Nile. Canals bring water from the Nile to irrigate farms and support cities. The Nile supports agriculture and fishing. The Nile also has served as an important transportation route for thousands of years. Today, some residents of El Qâhira (Cairo) have begun using private speed boats, water taxis, or ferries to avoid crowded streets. Dams, such as the Aswân High Dam in Egypt, have been built to help to tame the river and provide a source of hydroelectric power. However, the silt and sediment that used to flow north, enriching the soil and building the delta, is now building up behind the dam instead. Instead of growing in size through the soil deposits, the delta is now shrinking due to erosion along the Mediterranean Sea. In addition, routine annual flooding no longer occurs along parts of the Nile. These floods were necessary to flush and clean the water of human and agricultural waste. As a result, the water is becoming more polluted. The Nile River also continues to be an important trade route, connecting Africa with markets in Europe and beyond.'
+        }
+
+        response = self.client.post('/notes', json=data, headers=self.auth_header)
+        assert response.status_code == 201
+        response = self.client.get(f'/notes_mcq/{response.json["id"]}', headers=self.auth_header)
+        assert response.status_code == 200
+
+    def test_notes_patch(self):
+        response = self.client.get('/notes', headers=self.auth_header)
+        assert response.status_code == 200
+        assert response.json == []
+        data = {
+            'finished': False,
+            'name': 'Code Notes',
+            'contents': 'Coding is hard but consistency and documentation helps #coding'
+        }
+        data2 = {
+            'finished': False,
+            'name': 'Code Notes',
+            'contents': 'this is changed Coding is hard helps #coding'
+        }
+        expected = {
+            'id': ANY,
+            'date_created': ANY,
+            'finished': False,
+            'name': 'Code Notes',
+            'contents':  'this is changed Coding is hard helps #coding',
+            'tags': ['coding']
+        }
+        response = self.client.post('/notes', json=data, headers=self.auth_header)
+        assert response.status_code == 201
+        response = self.client.patch(f'/notes/{response.json["id"]}', json=data2, headers=self.auth_header)
+        assert response.status_code == 200
+        response = self.client.get('/notes', headers=self.auth_header)
+        assert response.status_code == 200
+        assert len(response.json) == 1
+        assert response.json[0] == expected
+
 class TestFlashCards(UserTestCase):
 
     def test_flashcard_post(self):
@@ -237,6 +301,43 @@ class TestFlashCards(UserTestCase):
         }
         response = self.client.post('/flashcards', json=data, headers=self.auth_header)
         assert response.status_code == 201
+        response = self.client.get('/flashcards', headers=self.auth_header)
+        assert response.status_code == 200
+        assert len(response.json) == 1
+        assert response.json[0] == expected
+
+    def test_flashcard_due(self):
+        response = self.client.get('/flashcards', headers=self.auth_header)
+        assert response.status_code == 200
+        assert response.json == []
+        data = {'front': 'what does a test look like?',
+                'back': 'like this #test'}
+        response = self.client.post('/flashcards', json=data, headers=self.auth_header)
+        assert response.status_code == 201
+        response2 = self.client.get('/flashcards/due', headers=self.auth_header)
+        assert response.status_code == 201
+
+    def test_flashcard_patch(self):
+        response = self.client.get('/flashcards', headers=self.auth_header)
+        assert response.status_code == 200
+        assert response.json == []
+        data = {'front': 'what does a test look like?',
+                'back': 'like this #test'}
+
+        data2 = {'front': 'what does a test look like?',
+                'back': 'like this has been patched #test'}
+        expected = {
+            'id': ANY,
+            'date_created': ANY,
+            'date_due': ANY,
+            'front': 'what does a test look like?',
+            'back': 'like this has been patched #test',
+            'tags': ['test']
+        }
+        response = self.client.post('/flashcards', json=data, headers=self.auth_header)
+        assert response.status_code == 201
+        response = self.client.patch(f'/flashcards/{response.json["id"]}', json=data2, headers=self.auth_header)
+        assert response.status_code == 200
         response = self.client.get('/flashcards', headers=self.auth_header)
         assert response.status_code == 200
         assert len(response.json) == 1

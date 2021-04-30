@@ -62,7 +62,19 @@ def get_nouns_multipartite(text):
     keyphrases = extractor.get_n_best(n=15)
     for key in keyphrases:
         out.append(key[0])
-    return out
+    if not out:
+        pos = {'NOUN'}
+        extractor.candidate_selection(pos=pos, stoplist=stoplist)
+        extractor.candidate_weighting(alpha=1.1,
+                                      threshold=0.75,
+                                      method='average')
+        keyphrases = extractor.get_n_best(n=15)
+        for key in keyphrases:
+            out.append(key[0])
+        return out
+    else:
+        # import pdb; pdb.set_trace()
+        return out
 
 
 # call this second
@@ -185,7 +197,6 @@ def get_decoys_conceptnet(word):
 
 def generate_mcq(keyword_sentence_mapping):
     key_decoys_list = {}
-
     for keyword in keyword_sentence_mapping:
         wordsense = get_wordsense(keyword_sentence_mapping[keyword][0], keyword)
         if wordsense:
