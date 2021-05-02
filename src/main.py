@@ -8,7 +8,7 @@ from .resources import notes, flashcards, users
 db.create_all()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)  # print out everything aka debug
 
 # run main.py

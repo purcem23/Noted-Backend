@@ -18,22 +18,30 @@ from pywsd.lesk import cosine_lesk
 from nltk.corpus import wordnet as wn
 from ..config import app
 from flask_apiexceptions import (
-    JSONExceptionHandler, ApiException, ApiError, api_exception_handler)
+    JSONExceptionHandler,
+    ApiException,
+    ApiError,
+    api_exception_handler,
+)
 from nltk.tokenize import sent_tokenize
 
 exception_handler = JSONExceptionHandler()
 exception_handler.init_app(app)
-exception_handler.register(code_or_exception=ApiException, handler=api_exception_handler)
+exception_handler.register(
+    code_or_exception=ApiException, handler=api_exception_handler
+)
 
-#call first
-#Bert-extractive-summarizer
+# call first
+# Bert-extractive-summarizer
 def init_mcq(contents):
     # f = open("cardiac.txt", "r")
     full_text = contents
     model = Summarizer()
     result = model(full_text, min_length=60, max_length=500, ratio=0.4)
-    summarized_text = ''.join(result)
+    summarized_text = "".join(result)
     return summarized_text
+
+
 # print(summarized_text)
 
 
@@ -47,27 +55,25 @@ def get_nouns_multipartite(text):
     extractor.load_document(input=text)
     #    not contain punctuation marks or stopwords as candidates.
     # pos makes sure keywords are pronouns
-    pos = {'PROPN'}
+    pos = {"PROPN"}
     stoplist = list(string.punctuation)
     # stoplist removes stopwords and formatting
-    stoplist += ['-lrb-', '-rrb-', '-lcb-', '-rcb-', '-lsb-', '-rsb-']
-    stoplist += stopwords.words('english')
+    stoplist += ["-lrb-", "-rrb-", "-lcb-", "-rcb-", "-lsb-", "-rsb-"]
+    stoplist += stopwords.words("english")
     extractor.candidate_selection(pos=pos, stoplist=stoplist)
     # 4. build the Multipartite graph and rank candidates using random walk,
     #    alpha controls the weight adjustment mechanism, see TopicRank for
     #    threshold/method parameters.
-    extractor.candidate_weighting(alpha=1.1,
-                                  threshold=0.75,
-                                  method='average')
+    extractor.candidate_weighting(alpha=1.1, threshold=0.75, method="average")
     keyphrases = extractor.get_n_best(n=15)
     for key in keyphrases:
         out.append(key[0])
     if not out:
-        pos = {'NOUN'}
+        pos = {"NOUN"}
         extractor.candidate_selection(pos=pos, stoplist=stoplist)
-        extractor.candidate_weighting(alpha=1.1,
-                                      threshold=0.75,
-                                      method='average')
+        extractor.candidate_weighting(
+            alpha=1.1, threshold=0.75, method="average"
+        )
         keyphrases = extractor.get_n_best(n=15)
         for key in keyphrases:
             out.append(key[0])
@@ -79,7 +85,7 @@ def get_nouns_multipartite(text):
 
 # call this second
 def keyword_prep(full_text, summarized_text):
-    #prints keywords/filtered keywords
+    # prints keywords/filtered keywords
     keywords = get_nouns_multipartite(full_text)
     # print(keywords)
     filtered_keys = []
@@ -87,6 +93,8 @@ def keyword_prep(full_text, summarized_text):
         if keyword.lower() in summarized_text.lower():
             filtered_keys.append(keyword)
     return filtered_keys
+
+
 # print(filtered_keys)
 
 
@@ -95,7 +103,9 @@ def tokenize_sentences(text):
     sentences = [sent_tokenize(text)]
     sentences = [y for x in sentences for y in x]
     # Remove any short sentences less than 20 letters.
-    sentences = [sentence.strip() for sentence in sentences if len(sentence) > 20]
+    sentences = [
+        sentence.strip() for sentence in sentences if len(sentence) > 20
+    ]
     return sentences
 
 
@@ -121,8 +131,12 @@ def get_sentences_for_keyword(keywords, sentences):
 # call third
 def keyword_to_sentence(summarized_text, filtered_keys):
     sentences = tokenize_sentences(summarized_text)
-    keyword_sentence_mapping = get_sentences_for_keyword(filtered_keys, sentences)
+    keyword_sentence_mapping = get_sentences_for_keyword(
+        filtered_keys, sentences
+    )
     return keyword_sentence_mapping
+
+
 # print(keyword_sentence_mapping)
 
 
@@ -159,11 +173,13 @@ def get_wordsense(sent, word):
     if len(word.split()) > 0:
         word = word.replace(" ", "_")
 
-    synsets = wn.synsets(word, 'n')
+    synsets = wn.synsets(word, "n")
     if synsets:
-        wup = max_similarity(sent, word, 'wup', pos='n')
-        adapted_lesk_output = adapted_lesk(sent, word, pos='n')
-        lowest_index = min(synsets.index(wup), synsets.index(adapted_lesk_output))
+        wup = max_similarity(sent, word, "wup", pos="n")
+        adapted_lesk_output = adapted_lesk(sent, word, pos="n")
+        lowest_index = min(
+            synsets.index(wup), synsets.index(adapted_lesk_output)
+        )
         return synsets[lowest_index]
     else:
         return None
@@ -176,20 +192,29 @@ def get_wordsense(sent, word):
 def get_decoys_conceptnet(word):
     word = word.lower()
     original_word = word
-    if (len(word.split()) > 0):
+    if len(word.split()) > 0:
         word = word.replace(" ", "_")
     decoys_list = []
-    url = "http://api.conceptnet.io/query?node=/c/en/%s/n&rel=/r/PartOf&start=/c/en/%s&limit=5" % (word, word)
+    url = (
+        "http://api.conceptnet.io/query?node=/c/en/%s/n&rel=/r/PartOf&start=/c/en/%s&limit=5"
+        % (word, word)
+    )
     obj = requests.get(url).json()
 
-    for edge in obj['edges']:
-        link = edge['end']['term']
+    for edge in obj["edges"]:
+        link = edge["end"]["term"]
 
-        url2 = "http://api.conceptnet.io/query?node=%s&rel=/r/PartOf&end=%s&limit=10" % (link, link)
+        url2 = (
+            "http://api.conceptnet.io/query?node=%s&rel=/r/PartOf&end=%s&limit=10"
+            % (link, link)
+        )
         obj2 = requests.get(url2).json()
-        for edge in obj2['edges']:
-            word2 = edge['start']['label']
-            if word2 not in decoys_list and original_word.lower() not in word2.lower():
+        for edge in obj2["edges"]:
+            word2 = edge["start"]["label"]
+            if (
+                word2 not in decoys_list
+                and original_word.lower() not in word2.lower()
+            ):
                 decoys_list.append(word2)
 
     return decoys_list
@@ -198,7 +223,9 @@ def get_decoys_conceptnet(word):
 def generate_mcq(keyword_sentence_mapping):
     key_decoys_list = {}
     for keyword in keyword_sentence_mapping:
-        wordsense = get_wordsense(keyword_sentence_mapping[keyword][0], keyword)
+        wordsense = get_wordsense(
+            keyword_sentence_mapping[keyword][0], keyword
+        )
         if wordsense:
             decoys = get_decoys_wordnet(wordsense, keyword)
             if len(decoys) == 0:
@@ -211,7 +238,6 @@ def generate_mcq(keyword_sentence_mapping):
             if len(decoys) != 0:
                 key_decoys_list[keyword] = decoys
 
-
     questions = []
     for each in key_decoys_list:
         sentence = keyword_sentence_mapping[each][0]
@@ -220,9 +246,15 @@ def generate_mcq(keyword_sentence_mapping):
         possibilities = [each.capitalize()] + key_decoys_list[each]
         top4possibilities = possibilities[:4]
         random.shuffle(top4possibilities)
-        questions.append({'question': output,
-                          'fake_answers': top4possibilities,
-                          'answer': each.capitalize()})
+        questions.append(
+            {
+                "question": output,
+                "fake_answers": top4possibilities,
+                "answer": each.capitalize(),
+            }
+        )
 
     return questions
+
+
 # generate_mcq()

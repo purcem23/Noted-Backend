@@ -5,12 +5,18 @@ import numpy as np
 import networkx as nx
 from ..config import app
 from flask_apiexceptions import (
-    JSONExceptionHandler, ApiException, ApiError, api_exception_handler)
+    JSONExceptionHandler,
+    ApiException,
+    ApiError,
+    api_exception_handler,
+)
 from nltk.tokenize import sent_tokenize
 
 exception_handler = JSONExceptionHandler()
 exception_handler.init_app(app)
-exception_handler.register(code_or_exception=ApiException, handler=api_exception_handler)
+exception_handler.register(
+    code_or_exception=ApiException, handler=api_exception_handler
+)
 
 
 def sentence_similarity(sent1, sent2, stopwords=None):
@@ -48,13 +54,15 @@ def build_similarity_matrix(sentences, stop_words):
         for idx2 in range(len(sentences)):
             if idx1 == idx2:  # ignore if both are same sentences
                 continue
-            similarity_matrix[idx1][idx2] = sentence_similarity(sentences[idx1], sentences[idx2], stop_words)
+            similarity_matrix[idx1][idx2] = sentence_similarity(
+                sentences[idx1], sentences[idx2], stop_words
+            )
 
     return similarity_matrix
 
 
 def generate_summary(contents, top_n=3):
-    stop_words = stopwords.words('english')
+    stop_words = stopwords.words("english")
     summarize_note = []
     # note = contents.split(". ")
     note = sent_tokenize(contents)
@@ -70,10 +78,12 @@ def generate_summary(contents, top_n=3):
     scores = nx.pagerank(sentence_similarity_graph)
 
     # Sort the rank and pick top sentences
-    ranked_sentence = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
+    ranked_sentence = sorted(
+        ((scores[i], s) for i, s in enumerate(sentences)), reverse=True
+    )
 
     if len(sentences) >= 10:
-        top_n = math.floor(len(sentences)*0.4)
+        top_n = math.floor(len(sentences) * 0.4)
 
     if len(sentences) <= 4:
         return ""
@@ -82,7 +92,4 @@ def generate_summary(contents, top_n=3):
         summarize_note.append(" ".join(ranked_sentence[i][1]))
 
     # Step 5 -  output the summarize text
-    return(". ".join(summarize_note))
-
-
-
+    return ". ".join(summarize_note)

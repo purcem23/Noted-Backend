@@ -6,8 +6,18 @@ from sqlalchemy.sql import func
 import flask_praetorian
 import re
 from ..config import app, db
-from ..models import FlashCardModel, FlashCardActivityModel, TagModel, flashcard_tag_table
-from ..schemas import FlashCardSchema, FlashCardAnswerSchema, TagSchema, TagStatSchema
+from ..models import (
+    FlashCardModel,
+    FlashCardActivityModel,
+    TagModel,
+    flashcard_tag_table,
+)
+from ..schemas import (
+    FlashCardSchema,
+    FlashCardAnswerSchema,
+    TagSchema,
+    TagStatSchema,
+)
 from supermemo2 import first_review, SMTwo
 
 
@@ -23,32 +33,36 @@ def get_or_create(session, model, **kwargs):
 
 
 # GET all method
-@app.route('/flashcards', methods=['GET'])
+@app.route("/flashcards", methods=["GET"])
 @flask_praetorian.auth_required
 def flashcard_list_get():
-    tag_name = request.args.get('tag')
+    tag_name = request.args.get("tag")
     if tag_name:
-        flashcards = FlashCardModel.query.filter(FlashCardModel.tags.any(name=tag_name),
-                                                 FlashCardModel.user_id == flask_praetorian.current_user().id).all()
+        flashcards = FlashCardModel.query.filter(
+            FlashCardModel.tags.any(name=tag_name),
+            FlashCardModel.user_id == flask_praetorian.current_user().id,
+        ).all()
     else:
         flashcards = FlashCardModel.query.filter(
-            FlashCardModel.user_id == flask_praetorian.current_user().id).all()
+            FlashCardModel.user_id == flask_praetorian.current_user().id
+        ).all()
     return jsonify(FlashCardSchema(many=True).dump(flashcards))
 
 
 # GET all by id
-@app.route('/flashcards/<int:flashcards_id>', methods=['GET'])
+@app.route("/flashcards/<int:flashcards_id>", methods=["GET"])
 @flask_praetorian.auth_required
 def flashcard_get(flashcards_id):
     result = FlashCardModel.query.filter_by(
-        id=flashcards_id, user_id=flask_praetorian.current_user().id).first()
+        id=flashcards_id, user_id=flask_praetorian.current_user().id
+    ).first()
     if not result:
-        abort(404, message='Could not find Note with that ID')
+        abort(404, message="Could not find Note with that ID")
     return jsonify(FlashCardSchema().dump(result))
 
 
 # POST one, not limited by id
-@app.route('/flashcards', methods=['POST'])
+@app.route("/flashcards", methods=["POST"])
 @flask_praetorian.auth_required
 def flashcard_post():
     flashcard = FlashCardSchema().load(request.json)
@@ -68,18 +82,19 @@ def flashcard_post():
     return jsonify(FlashCardSchema().dump(flashcard)), 201
 
 
-@app.route('/flashcards/<int:flashcards_id>', methods=['PATCH'])
+@app.route("/flashcards/<int:flashcards_id>", methods=["PATCH"])
 @flask_praetorian.auth_required
 def flashcard_patch(flashcards_id):
     flashcard = FlashCardSchema(partial=True).load(request.json)
     result = FlashCardModel.query.filter_by(
-        id=flashcards_id, user_id=flask_praetorian.current_user().id).first()
+        id=flashcards_id, user_id=flask_praetorian.current_user().id
+    ).first()
     if not result:
-        abort(404, message='Flashcard does not exist, cannot update')
+        abort(404, message="Flashcard does not exist, cannot update")
     for key, value in flashcard.items():
         setattr(result, key, value)
-    matches = re.findall(r"\B(#[a-zA-Z0-9]+\b)", flashcard['front'])
-    matches += re.findall(r"\B(#[a-zA-Z0-9]+\b)", flashcard['back'])
+    matches = re.findall(r"\B(#[a-zA-Z0-9]+\b)", flashcard["front"])
+    matches += re.findall(r"\B(#[a-zA-Z0-9]+\b)", flashcard["back"])
     # remove old tags
     result.tags = []
     for match in matches:
@@ -91,45 +106,49 @@ def flashcard_patch(flashcards_id):
     return jsonify(FlashCardSchema().dump(result))
 
 
-@app.route('/flashcards/<int:flashcards_id>', methods=['DELETE'])
+@app.route("/flashcards/<int:flashcards_id>", methods=["DELETE"])
 @flask_praetorian.auth_required
 def flashcard_delete(flashcards_id):
     result = FlashCardModel.query.filter_by(
-        id=flashcards_id, user_id=flask_praetorian.current_user().id).first()
+        id=flashcards_id, user_id=flask_praetorian.current_user().id
+    ).first()
     if not result:
-        abort(404, message='Flashcard does not exist, cannot delete')
+        abort(404, message="Flashcard does not exist, cannot delete")
     db.session.delete(result)
     db.session.commit()
-    return '200'
+    return "200"
 
 
-@app.route('/flashcards/due', methods=['GET'])
+@app.route("/flashcards/due", methods=["GET"])
 @flask_praetorian.auth_required
 def flashcards_due():
     flashcards = FlashCardModel.query.filter_by(
-        user_id=flask_praetorian.current_user().id).order_by(FlashCardModel.date_due.asc())
+        user_id=flask_praetorian.current_user().id
+    ).order_by(FlashCardModel.date_due.asc())
     return jsonify(FlashCardSchema(many=True).dump(flashcards))
 
 
-@app.route('/flashcards/<int:flashcards_id>/answer', methods=['PUT'])
+@app.route("/flashcards/<int:flashcards_id>/answer", methods=["PUT"])
 @flask_praetorian.auth_required
 def flashcard_put_answers(flashcards_id):
     answer = FlashCardAnswerSchema().load(request.json)
     result = FlashCardModel.query.filter_by(
-        id=flashcards_id, user_id=flask_praetorian.current_user().id).first()
+        id=flashcards_id, user_id=flask_praetorian.current_user().id
+    ).first()
     if not result:
-        abort(404, message='Flashcard does not exist, cannot answer')
+        abort(404, message="Flashcard does not exist, cannot answer")
     previous = FlashCardActivityModel.query.filter_by(
-        flashcards_id=flashcards_id)
+        flashcards_id=flashcards_id
+    )
     if previous.count() == 0:
-        review = first_review(answer['score'], datetime.now())
+        review = first_review(answer["score"], datetime.now())
         data = dict(
             flashcards_id=flashcards_id,
-            quality=answer['score'],
+            quality=answer["score"],
             easiness=review._SMTwo__easiness,
             interval=review._SMTwo__interval,
             repetitions=review._SMTwo__repetitions,
-            date_reviewed=datetime.now()
+            date_reviewed=datetime.now(),
         )
         log = FlashCardActivityModel(**data)
         result.date_due = review._SMTwo__review_date
@@ -139,29 +158,43 @@ def flashcard_put_answers(flashcards_id):
     else:
         last_review = previous.first()
         review = SMTwo()
-        review.calc(quality=last_review.quality,
-                    easiness=last_review.easiness,
-                    interval=last_review.interval,
-                    repetitions=last_review.repetitions,
-                    review_date=datetime.now())
+        review.calc(
+            quality=last_review.quality,
+            easiness=last_review.easiness,
+            interval=last_review.interval,
+            repetitions=last_review.repetitions,
+            review_date=datetime.now(),
+        )
         log = FlashCardActivityModel(
             flashcards_id=flashcards_id,
-            quality=answer['score'],
+            quality=answer["score"],
             easiness=review._SMTwo__easiness,
             interval=review._SMTwo__interval,
             repetitions=review._SMTwo__repetitions,
-            date_reviewed=datetime.now())
+            date_reviewed=datetime.now(),
+        )
         result.date_due = review._SMTwo__review_date
         db.session.add(log)
         db.session.commit()
-    return '200'
+    return "200"
 
 
-@app.route('/stats', methods=['GET'])
+@app.route("/stats", methods=["GET"])
 @flask_praetorian.auth_required
 def flashcard_stats():
-    tags = TagModel.query.join(flashcard_tag_table).join(FlashCardModel).filter_by(
-        user_id=flask_praetorian.current_user().id).join(FlashCardActivityModel).with_entities(TagModel.name.label('tag'), func.avg(FlashCardActivityModel.quality).label('score'), func.count(FlashCardActivityModel.quality).label('repetitions')).group_by(TagModel.name).all()
+    tags = (
+        TagModel.query.join(flashcard_tag_table)
+        .join(FlashCardModel)
+        .filter_by(user_id=flask_praetorian.current_user().id)
+        .join(FlashCardActivityModel)
+        .with_entities(
+            TagModel.name.label("tag"),
+            func.avg(FlashCardActivityModel.quality).label("score"),
+            func.count(FlashCardActivityModel.quality).label("repetitions"),
+        )
+        .group_by(TagModel.name)
+        .all()
+    )
     return jsonify(TagStatSchema(many=True).dump(tags))
 
 

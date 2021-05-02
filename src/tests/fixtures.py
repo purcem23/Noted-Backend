@@ -8,11 +8,12 @@ from ..resources.flashcards import app
 from ..resources.users import app
 from ..config import db
 
+
 @pytest.fixture
 def client():
 
-    db_fd, app.config['DATABASE'] = tempfile.mkstemp()
-    app.config['TESTING'] = True
+    db_fd, app.config["DATABASE"] = tempfile.mkstemp()
+    app.config["TESTING"] = True
     with app.test_client() as client:
         with app.app_context():
             db.drop_all()
@@ -23,4 +24,4 @@ def client():
         yield client
 
     os.close(db_fd)
-    os.unlink(app.config['DATABASE'])
+    os.unlink(app.config["DATABASE"])
