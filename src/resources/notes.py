@@ -171,7 +171,7 @@ def tags_list_get():
     return jsonify(TagSchema(many=True).dump(tags))
 
 
-@app.route("/notes_mcq/<int:note_id>", methods=["GET"])
+@app.route('/notes/<int:note_id>/mcq', methods=['GET'])
 @flask_praetorian.auth_required
 def notes_mcq_get(note_id):
     result = NoteModel.query.filter_by(

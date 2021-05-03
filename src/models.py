@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 from .config import db
 from sqlalchemy.ext.declarative import declarative_base
@@ -83,8 +83,9 @@ class FlashCardModel(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     date_due = db.Column(db.DateTime, nullable=True, default=datetime.now)
     tags = relationship(
-        "TagModel", secondary=flashcard_tag_table, back_populates="flashcards"
-    )
+        'TagModel', secondary=flashcard_tag_table, back_populates='flashcards')
+    activity = relationship('FlashCardActivityModel',
+                            cascade="all, delete-orphan")
 
 
 class FlashCardActivityModel(db.Model):
@@ -96,7 +97,11 @@ class FlashCardActivityModel(db.Model):
     easiness = db.Column(db.Float)
     interval = db.Column(db.Integer)
     repetitions = db.Column(db.Integer)
-    __mapper_args__ = {"order_by": date_reviewed.desc()}
+    flashcard = relationship("FlashCardModel", backref=backref(
+        "flashcard_activity", cascade="all, delete-orphan"))
+    __mapper_args__ = {
+        'order_by': date_reviewed.desc()
+    }
 
 
 class TagModel(db.Model):
