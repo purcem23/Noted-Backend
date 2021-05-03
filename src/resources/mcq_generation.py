@@ -31,6 +31,7 @@ exception_handler.register(
     code_or_exception=ApiException, handler=api_exception_handler
 )
 
+
 # call first
 # Bert-extractive-summarizer
 def init_mcq(contents):
@@ -243,14 +244,17 @@ def generate_mcq(keyword_sentence_mapping):
         sentence = keyword_sentence_mapping[each][0]
         pattern = re.compile(each, re.IGNORECASE)
         output = pattern.sub(" _______ ", sentence)
-        possibilities = [each.capitalize()] + key_decoys_list[each]
-        top4possibilities = possibilities[:4]
+        answer = each.capitalize()
+        fake_answers = key_decoys_list[each]
+        if answer in fake_answers:
+            fake_answers.remove(answer)
+        top4possibilities = [answer] + fake_answers[:3]
         random.shuffle(top4possibilities)
         questions.append(
             {
                 "question": output,
                 "fake_answers": top4possibilities,
-                "answer": each.capitalize(),
+                "answer": answer,
             }
         )
 
