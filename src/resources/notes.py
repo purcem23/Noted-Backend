@@ -176,10 +176,11 @@ def notes_mcq_get(note_id):
     result = NoteModel.query.filter_by(
         id=note_id, user_id=flask_praetorian.current_user().id
     ).first()
+
     if not result:
         abort(404, message="Could not find Note with that ID")
     full_text = re.sub(r"\B#([a-zA-Z0-9]+\b)", r"\1", result.contents)
-    summarized_text = generate_summary(full_text)
+    summarized_text = generate_summary(full_text, summ_value=0.6)
     keyword_preparation = keyword_prep(full_text, summarized_text)
     keyword_sentence_mapping = keyword_to_sentence(
         summarized_text, keyword_preparation

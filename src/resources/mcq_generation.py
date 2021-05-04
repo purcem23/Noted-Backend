@@ -130,6 +130,7 @@ def get_sentences_for_keyword(keywords, sentences):
 # call third
 def keyword_to_sentence(summarized_text, filtered_keys):
     sentences = tokenize_sentences(summarized_text)
+    random.shuffle(filtered_keys)
     keyword_sentence_mapping = get_sentences_for_keyword(
         filtered_keys, sentences
     )

@@ -62,7 +62,7 @@ def build_similarity_matrix(sentences, stop_words):
     return similarity_matrix
 
 
-def generate_summary(contents, top_n=3):
+def generate_summary(contents, top_n=3,summ_value=0.4):
     stop_words = stopwords.words("english")
     summarize_note = []
     # note = contents.split(". ")
@@ -84,7 +84,7 @@ def generate_summary(contents, top_n=3):
     )
 
     if len(sentences) >= 10:
-        top_n = math.floor(len(sentences) * 0.4)
+        top_n = math.floor(len(sentences) * summ_value)
 
     if len(sentences) <= 4:
         return ""
