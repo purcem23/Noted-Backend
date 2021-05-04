@@ -7,7 +7,6 @@ from ..models import NoteModel, TagModel
 from ..schemas import NotesSchema, TagSchema, McqSchema
 from .nlp_utils import generate_summary
 from .mcq_generation import (
-    init_mcq,
     keyword_prep,
     keyword_to_sentence,
     generate_mcq,
@@ -179,8 +178,9 @@ def notes_mcq_get(note_id):
     ).first()
     if not result:
         abort(404, message="Could not find Note with that ID")
-    summarized_text = init_mcq(result.contents)
-    keyword_preparation = keyword_prep(result.contents, summarized_text)
+    full_text = re.sub(r"\B#([a-zA-Z0-9]+\b)", r"\1", result.contents)
+    summarized_text = generate_summary(full_text)
+    keyword_preparation = keyword_prep(full_text, summarized_text)
     keyword_sentence_mapping = keyword_to_sentence(
         summarized_text, keyword_preparation
     )

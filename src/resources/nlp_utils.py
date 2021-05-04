@@ -1,4 +1,5 @@
 import math
+import re
 from nltk.corpus import stopwords
 from nltk.cluster.util import cosine_distance
 import numpy as np
@@ -91,5 +92,18 @@ def generate_summary(contents, top_n=3):
     for i in range(top_n):
         summarize_note.append(" ".join(ranked_sentence[i][1]))
 
+    # Join and add full stops if applicable
+    summarize_text = ""
+    for sentence in summarize_note:
+        if sentence[len(sentence) - 1] == ".":
+            summarize_text += sentence
+            summarize_text += " "
+        else:
+            summarize_text += sentence
+            summarize_text += ". "
+
+    # Remove hashtags
+    summarize_text = re.sub(r"\B#([a-zA-Z0-9]+\b)", r"\1", summarize_text)
+
     # Step 5 -  output the summarize text
-    return ". ".join(summarize_note)
+    return summarize_text

@@ -24,6 +24,7 @@ from flask_apiexceptions import (
     api_exception_handler,
 )
 from nltk.tokenize import sent_tokenize
+import time
 
 exception_handler = JSONExceptionHandler()
 exception_handler.init_app(app)
@@ -34,16 +35,13 @@ exception_handler.register(
 
 # call first
 # Bert-extractive-summarizer
-def init_mcq(contents):
-    # f = open("cardiac.txt", "r")
-    full_text = contents
-    model = Summarizer()
-    result = model(full_text, min_length=60, max_length=500, ratio=0.4)
-    summarized_text = "".join(result)
-    return summarized_text
-
-
-# print(summarized_text)
+# def init_mcq(contents):
+#     f = open("cardiac.txt", "r")
+#     full_text = contents
+#     model = Summarizer()
+#     result = model(full_text, min_length=60, max_length=500, ratio=0.4)
+#     summarized_text = "".join(result)
+#     return summarized_text
 
 
 # uses PKE library
@@ -54,7 +52,7 @@ def get_nouns_multipartite(text):
     out = []
     extractor = pke.unsupervised.MultipartiteRank()
     extractor.load_document(input=text)
-    #    not contain punctuation marks or stopwords as candidates.
+    # not contain punctuation marks or stopwords as candidates.
     # pos makes sure keywords are pronouns
     pos = {"PROPN"}
     stoplist = list(string.punctuation)
@@ -226,7 +224,7 @@ def generate_mcq(keyword_sentence_mapping):
     for keyword in keyword_sentence_mapping:
         wordsense = get_wordsense(
             keyword_sentence_mapping[keyword][0], keyword
-        )
+        ) if len(keyword_sentence_mapping[keyword]) > 0 else None
         if wordsense:
             decoys = get_decoys_wordnet(wordsense, keyword)
             if len(decoys) == 0:
@@ -234,29 +232,31 @@ def generate_mcq(keyword_sentence_mapping):
             if len(decoys) != 0:
                 key_decoys_list[keyword] = decoys
         else:
-
             decoys = get_decoys_conceptnet(keyword)
             if len(decoys) != 0:
                 key_decoys_list[keyword] = decoys
 
     questions = []
+    used_sentences = []
     for each in key_decoys_list:
         sentence = keyword_sentence_mapping[each][0]
-        pattern = re.compile(each, re.IGNORECASE)
-        output = pattern.sub(" _______ ", sentence)
-        answer = each.capitalize()
-        fake_answers = key_decoys_list[each]
-        if answer in fake_answers:
-            fake_answers.remove(answer)
-        top4possibilities = [answer] + fake_answers[:3]
-        random.shuffle(top4possibilities)
-        questions.append(
-            {
-                "question": output,
-                "fake_answers": top4possibilities,
-                "answer": answer,
-            }
-        )
+        if sentence not in used_sentences:
+            used_sentences.append(sentence)
+            pattern = re.compile(each, re.IGNORECASE)
+            output = pattern.sub("_______", sentence)
+            answer = each.capitalize()
+            fake_answers = key_decoys_list[each]
+            if answer in fake_answers:
+                fake_answers.remove(answer)
+            top4possibilities = [answer] + fake_answers[:3]
+            random.shuffle(top4possibilities)
+            questions.append(
+                {
+                    "question": output,
+                    "fake_answers": top4possibilities,
+                    "answer": answer,
+                }
+            )
 
     return questions
 
