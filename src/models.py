@@ -57,7 +57,7 @@ class NoteModel(db.Model):
     __tablename__ = "note"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    contents = db.Column(db.String(500), nullable=False)
+    contents = db.Column(db.String(5000), nullable=False)
     finished = db.Column(db.Boolean, nullable=False)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.now)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
@@ -78,7 +78,7 @@ class FlashCardModel(db.Model):
     __tablename__ = "flashcard"
     id = db.Column(db.Integer, primary_key=True)
     front = db.Column(db.String(150), nullable=False)
-    back = db.Column(db.String(150), nullable=False)
+    back = db.Column(db.String(300), nullable=False)
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.now)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     date_due = db.Column(db.DateTime, nullable=True, default=datetime.now)

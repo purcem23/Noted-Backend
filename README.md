@@ -1,36 +1,42 @@
-# CA400 template repo
+# Noted
+Noted is your all in one study buddy. It allows you to create
+mock tests out of your notes, learn with flashcards and
+avail of the spaced repetition study method.
 
-This is a template for CA400 projects.
+| Name         | Student Number      |
+| -----------  | ----------- |
+| Mike Purcell | 15446908    |
 
-## 1. Create your repo
 
-One person from your project team should fork this repo, then add other teammates as project members on GitLab.
+| Supervisor      |
+| -----------     |
+| Jennifer Foster |
 
-## 2. Name your repo appropriately
+## Requirements
 
-The name of your project must be of the form `2021-ca400-XXXXXXX`, where "`XXXXXXX`"
-should be replaced with your usernames (e.g. `2021-ca400-sblott-pclarke`).
-**Note** that the year should be set as appropriate to your year of study (e.g. in the
-2021/2022 academic year, this would change to '2022-ca400-sblott-pclarke')
+### Web Browser
+- Any browser that supports javascript
+- Recommended: Latest versions of Chrome, Firefox and Safari
 
-It is the *name of your repo* which matters (not the name of your project).
+### Server
+- The Noted server can be run on any standard computer
+- Requirements Hardware: 250MB(or greater) of memory
+- Required Software: Python, Pip, NodeJS, Yarn
 
-You can change the name of your repo on GitLab under:
 
-- Settings / General / Advanced / Change path
+## Installation
 
-It looks like this:
-
-![change-repo-path](./res/repo-change-path.png "Change repo path.")
-
-You should replace all of this file with a README describing your own project.
-
-## Additional resources
-
-- Repo [hygiene](https://gitlab.computing.dcu.ie/sblott/local-gitlab-documentation/blob/master/repo-hygiene.md)
-- Git [cheat sheet](https://gitlab.computing.dcu.ie/sblott/local-gitlab-documentation/blob/master/cheat-sheet.md)
-- Gitlab [CI environment](https://gitlab.computing.dcu.ie/sblott/docker-ci-environment) and it's [available software](https://gitlab.computing.dcu.ie/sblott/docker-ci-environment/blob/master/Dockerfile)
-- Example projects with CI configured:
-   * [Python](https://gitlab.computing.dcu.ie/sblott/test-project-python)
-   * [Java](https://gitlab.computing.dcu.ie/sblott/test-project-java)
-   * [MySql](https://gitlab.computing.dcu.ie/sblott/test-project-mysql)
+#### Set up
+- Download repo from GitLab
+- Navigate to /backend directory
+- Run the command: pip install requirements.txt
+- Navigate to /frontend directory
+- Run the command: yarn install
+#### Running Backend
+- Navigate to /backend directory
+- Run the command: python -m src.main
+- The API is now available at http://localhost:5000
+#### Running Frontend
+- Navigate to /frontend directory
+- Run the command: yarn start
+- Visit http://localhost:3000 in your web browser

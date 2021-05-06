@@ -252,7 +252,7 @@ class TestNotes(UserTestCase):
         )
         assert response.status_code == 201
         response = self.client.get(
-            f'/notes_mcq/{response.json["id"]}', headers=self.auth_header
+            f'/notes/{response.json["id"]}/mcq', headers=self.auth_header
         )
         assert response.status_code == 200
 
